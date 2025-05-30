@@ -1,0 +1,80 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/HeartRateStyles.uss?fileID=7433441132597879392&amp;guid=ebda0763a1188a14ab45e56619da0d07&amp;type=3#HeartRateStyles" />
+    <ui:VisualElement name="Root" class="app-container">
+        <ui:VisualElement class="content-overlay">
+            <ui:VisualElement name="ScanView" class="screen">
+                <ui:VisualElement class="card">
+                    <ui:Label text="HEART RATE MONITORS" class="title" />
+                    <ui:Label name="ScanStatus" text="Scanning for devices..." class="status" />
+                    <ui:ListView name="DeviceList" selectionType="Single" class="device-list" />
+                    <ui:Label name="ErrorLabel" class="error hidden" />
+                </ui:VisualElement>
+                <ui:VisualElement class="controls">
+                    <ui:Button name="ScanButton" text="RESCAN" class="scan-btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="DataView" class="screen hidden">
+                <ui:VisualElement class="card">
+                    <ui:Label text="DATA" class="title" />
+                    <ui:VisualElement class="vital-grid">
+                        <ui:VisualElement class="vital-card vital-card--primary">
+                            <ui:Label text="PULSE RATE" class="vital-label" />
+                            <ui:VisualElement class="vital-value-unit">
+                                <ui:Label name="prValue" text="-" class="vital-value" />
+                                <ui:Label text="BPM" class="vital-unit" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="SPO₂" class="vital-label" />
+                            <ui:VisualElement class="vital-value-unit">
+                                <ui:Label name="spo2Value" text="-" class="vital-value" />
+                                <ui:Label text="%" class="vital-unit" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="PI" class="vital-label" />
+                            <ui:VisualElement class="vital-value-unit">
+                                <ui:Label name="piValue" text="-" class="vital-value" />
+                                <ui:Label text="%" class="vital-unit" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="RR INTERVAL" class="vital-label" />
+                            <ui:VisualElement class="vital-value-unit">
+                                <ui:Label name="rrValue" text="-" class="vital-value" />
+                                <ui:Label text="ms" class="vital-unit" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="IR₁" class="vital-label" />
+                            <ui:Label name="ir1Value" text="-" class="vital-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="IR₂" class="vital-label" />
+                            <ui:Label name="ir2Value" text="-" class="vital-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="SDNN" class="vital-label" />
+                            <ui:Label name="sdnnValue" text="-" class="vital-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="SAMPLE INDEX" class="vital-label" />
+                            <ui:Label name="sampleValue" text="-" class="vital-value" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="vital-card">
+                            <ui:Label text="BATTERY" class="vital-label" />
+                            <ui:VisualElement class="vital-value-unit">
+                                <ui:Label name="batteryValue" text="-" class="vital-value" />
+                                <ui:Label text="%" class="vital-unit" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="controls">
+                        <ui:Toggle name="AutoConnectToggle" label="Auto-connect to this device" class="toggle" />
+                        <ui:Button name="DisconnectButton" text="DISCONNECT" class="disconnect-btn" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

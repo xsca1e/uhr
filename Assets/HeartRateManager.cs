@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Android;
 using BLE = BluetoothLEHardwareInterface;
 
 public class HeartRateManager
@@ -73,11 +74,11 @@ public class HeartRateManager
         public uint IR2;
         public byte Status;
         public byte SPO2;
-        public ushort Interval;
+        public ushort RRInterval;
         public byte Battery;
         public byte PI;
         public byte PR;
-        public byte HRV;
+        public byte SDNN;
         public byte SampleIndex;
 
         public void Deserialize(byte[] bytes)
@@ -91,11 +92,11 @@ public class HeartRateManager
                 IR2 = (uint)(r.ReadByte() | r.ReadByte() << 8 | r.ReadByte() << 16);
                 Status = r.ReadByte();
                 SPO2 = r.ReadByte();
-                Interval = (ushort)(r.ReadByte() | r.ReadByte() << 8);
+                RRInterval = (ushort)(r.ReadByte() | r.ReadByte() << 8);
                 Battery = r.ReadByte();
                 PI = r.ReadByte();
                 PR = r.ReadByte();
-                HRV = r.ReadByte();
+                SDNN = r.ReadByte();
                 SampleIndex = r.ReadByte();
             }
         }
@@ -204,6 +205,8 @@ public class HeartRateManager
                 if (instance == null)
                 {
                     instance = new HeartRateManager();
+                    instance.candidates = new List<Candidate>();
+                    instance.devices = new Dictionary<string, Device>();
                 }
                 return instance;
             }
@@ -212,12 +215,56 @@ public class HeartRateManager
 
     public static void Disable()
     {
+        Debug.LogFormat("[HRM] Disabling Bluetooth");
         BLE.BluetoothEnable(false);
     }
 
-    public static void Enable()
+    private static void RequestPermissions(string[] permissions)
     {
-        BLE.BluetoothEnable(true);
+        var requests = new List<string>();
+        foreach (string permission in permissions)
+        {
+            if (!Permission.HasUserAuthorizedPermission(permission))
+            {
+                requests.Add(permission);
+            }
+        }
+        var callbacks = new PermissionCallbacks();
+        callbacks.PermissionGranted += (permission) =>
+        {
+            Debug.LogFormat("[HRM] Granted permission {0}", permission);
+        };
+        callbacks.PermissionDenied += (permission) =>
+        {
+            Debug.LogFormat("[HRM] Denied permission {0}", permission);
+        };
+        Permission.RequestUserPermissions(requests.ToArray(), callbacks);
+    }
+
+    public static void CheckPermissions()
+    {
+        Debug.Log("[HRM] Enabling Bluetooth");
+        if (AndroidVersion.SDK_INT >= 31)
+        {
+            Debug.Log("[HRM] Android SDK >= S");
+            RequestPermissions(new string[]
+            {
+                Permission.FineLocation,
+                Permission.CoarseLocation,
+                "BLUETOOTH_CONNECT",
+                "BLUETOOTH_SCAN"
+            });
+        }
+        else
+        {
+            Debug.Log("[HRM] Android SDK < S");
+            RequestPermissions(new string[]
+                {
+                Permission.FineLocation,
+                Permission.CoarseLocation,
+                }
+            );
+        }
     }
 
     public void Init()
@@ -228,18 +275,26 @@ public class HeartRateManager
         }, (error) =>
         {
             Debug.LogFormat("[HRM] BLE error {0}", error);
-            OnError?.Invoke(error);
+            if (error.Contains("Not Enabled"))
+            {
+                BLE.BluetoothEnable(true);
+            }
+            else
+            {
+                OnError?.Invoke(error);
+            }
         });
     }
 
-    public void StartScan()
+    public void StartScan(string prefix = PrefixIgnoreCase)
     {
-        Debug.Log("[HRM] BLE start scan");
         candidates.Clear();
+        Debug.LogFormat("[HRM] BLE start scan for prefix \"{0}\"", prefix);
+        BLE.BluetoothScanMode(BLE.ScanMode.LowPower);
         BLE.ScanForPeripheralsWithServices(null, (address, name) =>
         {
             Debug.LogFormat("[HRM] BLE scan device {0} {1}", address, name);
-            if (name.ToLower().StartsWith(PrefixIgnoreCase.ToLower()))
+            if (name.ToLower().StartsWith(prefix.ToLower()))
             {
                 Debug.LogFormat("[HRM] BLE scan candidate {0} {1}", address, name);
                 var candidate = new Candidate(name, address);
@@ -255,10 +310,10 @@ public class HeartRateManager
         BLE.StopScan();
     }
 
-    public IEnumerator ScanTimeout(float timeout)
+    public IEnumerator ScanTimeout(float timeout, string prefix = PrefixIgnoreCase)
     {
         Debug.LogFormat("[HRM] BLE scan for {0}s", timeout);
-        StartScan();
+        StartScan(prefix);
         yield return new WaitForSeconds(timeout);
         StopScan();
         yield return null;
@@ -290,7 +345,8 @@ public class HeartRateManager
     {
         var packet = new Packet();
         packet.Deserialize(data);
-        if (packet.Data.Length != 0) {
+        if (packet.Data.Length != 0)
+        {
             Code code = (Code)(packet.Data[0]);
             switch (code)
             {
@@ -346,7 +402,17 @@ public class HeartRateManager
                 var device = Device.FromCandidate(candidate, serviceUUID);
                 // SetupMTU(device);
                 SetupSubscriptions(device);
+                devices.Add(device.Address, device);
                 OnConnected?.Invoke(device);
+            }
+        }, (address) =>
+        {
+            Device device;
+            if (devices.TryGetValue(address, out device))
+            {
+                Debug.LogFormat("[HRM] Lost connection {0}", device.Address);
+                devices.Remove(device.Address);
+                OnDisconnected?.Invoke(device);
             }
         });
     }
@@ -356,8 +422,11 @@ public class HeartRateManager
         BLE.DisconnectPeripheral(device.Address, (_) =>
         {
             Debug.LogFormat("[HRM] Disconnected {0}", device.Address);
-            devices.Remove(device.Address);
-            OnDisconnected?.Invoke(device);
+            if (devices.ContainsKey(device.Address))
+            {
+                devices.Remove(device.Address);
+                OnDisconnected?.Invoke(device);
+            }
         });
     }
 }

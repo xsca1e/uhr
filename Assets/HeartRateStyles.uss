@@ -1,0 +1,186 @@
+/* HACK: https://discussions.unity.com/t/listview-changing-list-is-empty-label/879109 */
+.unity-list-view__empty-label {
+    display: none;
+}
+
+.app-container {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(242, 242, 242);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(230, 242, 255);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.content-overlay {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+}
+
+.screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.card {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    color: rgb(0, 119, 182);
+    text-align: center;
+    margin-bottom: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.status {
+    font-size: 15px;
+    color: rgb(102, 102, 102);
+    text-align: center;
+    margin-bottom: 20px;
+    -unity-text-align: middle-center;
+}
+
+.error {
+    font-size: 15px;
+    color: rgb(255, 0, 0);
+    text-align: center;
+    margin-top: 16px;
+    -unity-text-align: middle-center;
+}
+
+.device-list {
+    width: 100%;
+    height: 360px;
+    background-color: rgb(242, 242, 242);
+    border-radius: 8px;
+    padding: 8px;
+    box-sizing: border-box;
+    -unity-overflow-clip-box: padding-box;
+}
+
+.scan-btn {
+    background-color: rgb(76, 175, 80);
+    color: white;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    min-width: 120px;
+    min-height: 40px;
+    -unity-font-style: bold;
+}
+
+.scan-btn:disabled {
+    background-color: rgb(158, 158, 158);
+}
+
+.stop-btn {
+    background-color: rgb(229, 57, 53);
+}
+
+.stop-btn:disabled {
+    background-color: rgb(158, 158, 158);
+}
+
+.vital-grid {
+    /* TBH grid layout seems not well supported, we use flexbox here */
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.vital-card {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(242, 242, 242);
+    border-radius: 4px;
+    padding: 6px;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.vital-card--primary {
+    background-color: rgb(0, 119, 182);
+    color: white;
+}
+
+.vital-label {
+    font-size: 13px;
+    font-weight: bold;
+    -unity-font-style: bold;
+}
+
+.vital-value-unit {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.vital-value {
+    font-size: 22px;
+    font-weight: bold;
+    -unity-font-style: bold;
+}
+
+.vital-unit {
+    font-size: 13px;
+    color: rgb(102, 102, 102);
+}
+
+.vital-card--primary .vital-unit {
+    color: rgb(230, 243, 255);
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 48px;
+}
+
+.toggle {
+    font-size: 15px;
+    color: rgb(0, 119, 182);
+    -unity-text-align: middle-left;
+}
+
+.disconnect-btn {
+    background-color: rgb(255, 0, 0);
+    color: white;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    min-width: 120px;
+    min-height: 40px;
+    -unity-font-style: bold;
+}
+
+.hidden {
+    display: none;
+}
