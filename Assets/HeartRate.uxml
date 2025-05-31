@@ -15,57 +15,79 @@
             </ui:VisualElement>
             <ui:VisualElement name="DataView" class="screen hidden">
                 <ui:VisualElement class="card">
-                    <ui:Label text="DATA" class="title" />
+                    <ui:Label name="deviceName" text="-" class="title" />
+                    <ui:VisualElement class="info-row">
+                        <ui:Label text="MAC" class="info-label" />
+                        <ui:Label name="macInfo" text="-" class="info-value" />
+                    </ui:VisualElement>
                     <ui:VisualElement class="vital-grid">
-                        <ui:VisualElement class="vital-card vital-card--primary">
-                            <ui:Label text="PULSE RATE" class="vital-label" />
-                            <ui:VisualElement class="vital-value-unit">
-                                <ui:Label name="prValue" text="-" class="vital-value" />
-                                <ui:Label text="BPM" class="vital-unit" />
+                        <ui:VisualElement class="vital-row">
+                            <ui:VisualElement class="vital-card vital-card--primary">
+                                <ui:Label text="PULSE RATE" class="vital-label" />
+                                <ui:VisualElement class="vital-value-unit">
+                                    <ui:Label name="prValue" text="-" class="vital-value" />
+                                    <ui:Label text="BPM" class="vital-unit" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="vital-card vital-card--secondary">
+                                <ui:Label text="SPO₂" class="vital-label" />
+                                <ui:VisualElement class="vital-value-unit">
+                                    <ui:Label name="spo2Value" text="-" class="vital-value" />
+                                    <ui:Label text="%" class="vital-unit" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="SPO₂" class="vital-label" />
-                            <ui:VisualElement class="vital-value-unit">
-                                <ui:Label name="spo2Value" text="-" class="vital-value" />
-                                <ui:Label text="%" class="vital-unit" />
+                        <ui:VisualElement class="vital-row">
+                            <ui:VisualElement class="vital-card">
+                                <ui:Label text="PI" class="vital-label" />
+                                <ui:VisualElement class="vital-value-unit">
+                                    <ui:Label name="piValue" text="-" class="vital-value" />
+                                    <ui:Label text="%" class="vital-unit" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="vital-card">
+                                <ui:Label text="RR INTERVAL" class="vital-label" />
+                                <ui:VisualElement class="vital-value-unit">
+                                    <ui:Label name="rrValue" text="-" class="vital-value" />
+                                    <ui:Label text="ms" class="vital-unit" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="PI" class="vital-label" />
-                            <ui:VisualElement class="vital-value-unit">
-                                <ui:Label name="piValue" text="-" class="vital-value" />
-                                <ui:Label text="%" class="vital-unit" />
+                        <ui:VisualElement class="vital-row">
+                            <ui:VisualElement class="vital-card">
+                                <ui:Label text="SDNN" class="vital-label" />
+                                <ui:Label name="sdnnValue" text="-" class="vital-value" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="vital-card vital-card--raw">
+                                <ui:Label text="IR" class="vital-label" />
+                                <ui:VisualElement class="vital-ir">
+                                    <ui:Label name="ir1Value" text="-" class="vital-value vital-value--ir" />
+                                    <ui:Label name="ir2Value" text="-" class="vital-value vital-value--ir" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="RR INTERVAL" class="vital-label" />
-                            <ui:VisualElement class="vital-value-unit">
-                                <ui:Label name="rrValue" text="-" class="vital-value" />
-                                <ui:Label text="ms" class="vital-unit" />
+                        <ui:VisualElement class="vital-row">
+                            <ui:VisualElement class="vital-card vital-card--technical">
+                                <ui:Label text="BATTERY" class="vital-label" />
+                                <ui:VisualElement class="vital-value-unit">
+                                    <ui:Label name="batteryValue" text="-" class="vital-value" />
+                                    <ui:Label text="%" class="vital-unit" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                            <ui:VisualElement class="vital-card vital-card--technical">
+                                <ui:Label text="SAMPLE INDEX" class="vital-label" />
+                                <ui:Label name="sampleValue" text="-" class="vital-value" />
                             </ui:VisualElement>
                         </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="IR₁" class="vital-label" />
-                            <ui:Label name="ir1Value" text="-" class="vital-value" />
-                        </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="IR₂" class="vital-label" />
-                            <ui:Label name="ir2Value" text="-" class="vital-value" />
-                        </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="SDNN" class="vital-label" />
-                            <ui:Label name="sdnnValue" text="-" class="vital-value" />
-                        </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="SAMPLE INDEX" class="vital-label" />
-                            <ui:Label name="sampleValue" text="-" class="vital-value" />
-                        </ui:VisualElement>
-                        <ui:VisualElement class="vital-card">
-                            <ui:Label text="BATTERY" class="vital-label" />
-                            <ui:VisualElement class="vital-value-unit">
-                                <ui:Label name="batteryValue" text="-" class="vital-value" />
-                                <ui:Label text="%" class="vital-unit" />
+                        <ui:VisualElement class="vital-row vital-row--mode">
+                            <ui:VisualElement class="vital-card">
+                                <ui:Label text="DISPLAY MODE" class="vital-label" />
+                                <ui:VisualElement name="modes" class="vital-modes">
+                                    <ui:Button name="PR_SPO2" text="PR&#10;SPO₂" value="1" class="vital-mode-btn" />
+                                    <ui:Button name="PR_RLX" text="PR&#10;RLX" value="2" class="vital-mode-btn" />
+                                    <ui:Button name="RMSSD_SPO2" text="RMSSD&#10;SPO₂" value="3" class="vital-mode-btn" />
+                                    <ui:Button name="SDNN_SPO2" text="SDNN&#10;SPO₂" value="4" class="vital-mode-btn" />
+                                </ui:VisualElement>
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>

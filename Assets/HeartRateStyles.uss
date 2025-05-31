@@ -106,21 +106,44 @@
     background-color: rgb(158, 158, 158);
 }
 
+.info-row {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 4px;
+    background-color: rgb(242, 242, 242);
+}
+
+.info-label {
+    font-size: 20px;
+}
+
+.info-value {
+    font-size: 20px;
+}
+
 .vital-grid {
-    /* TBH grid layout seems not well supported, we use flexbox here */
     display: flex;
     flex-direction: column;
-    margin-bottom: 20px;
+}
+
+.vital-row {
+    display: flex;
+    flex-direction: row;
 }
 
 .vital-card {
+    flex: 1;
     display: flex;
     flex-direction: column;
     background-color: rgb(242, 242, 242);
     border-radius: 4px;
-    padding: 6px;
+    padding: 8px;
     text-align: center;
-    margin-bottom: 4px;
+    min-height: 80px;
+    margin: 4px;
 }
 
 .vital-card--primary {
@@ -128,32 +151,55 @@
     color: white;
 }
 
+.vital-card--secondary {
+    background-color: rgb(200, 230, 255);
+}
+
+.vital-card--raw {
+    background-color: rgb(250, 250, 250);
+}
+
+.vital-card--technical {
+    background-color: rgb(230, 230, 230);
+    opacity: 0.9;
+}
+
 .vital-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
-    -unity-font-style: bold;
+    margin-bottom: 4px;
 }
 
 .vital-value-unit {
     display: flex;
     flex-direction: row;
     align-items: baseline;
-    gap: 4px;
+    gap: 0px;
+}
+
+.vital-ir {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
 }
 
 .vital-value {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
-    -unity-font-style: bold;
+}
+
+.vital-value--ir {
+    font-size: 16px;
 }
 
 .vital-unit {
-    font-size: 13px;
+    font-size: 12px;
     color: rgb(102, 102, 102);
 }
 
 .vital-card--primary .vital-unit {
-    color: rgb(230, 243, 255);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .controls {
@@ -179,6 +225,19 @@
     min-width: 120px;
     min-height: 40px;
     -unity-font-style: bold;
+}
+
+.vital-modes {
+    padding: 6px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.vital-mode-btn {
+    flex: 1;
+    border-radius: 4px;
+    font-size: 12px;
 }
 
 .hidden {

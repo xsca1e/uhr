@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Net.NetworkInformation;
 using UnityEngine;
 using UnityEngine.Android;
 using BLE = BluetoothLEHardwareInterface;
@@ -31,12 +32,21 @@ public class HeartRateManager
         public void Deserialize(byte[] bytes);
     }
 
-    public enum Code
+    public enum PayloadType
     {
-        Auth = 0xB1,
-        Data = 0xD0,
-        MAC = 0xBA,
-        Display = 0xBB,
+        Auth = 0xb1,
+        Reading = 0xd0,
+        MAC = 0xba,
+        Display = 0xbb,
+        Unknown = 0xff,
+    }
+
+    public enum DisplayMode
+    {
+        PR_SPO2 = 0x01,
+        PR_RLX = 0x02,
+        RMSSD_SPO2 = 0x03,
+        SDNN_SPO2 = 0x04,
     }
 
     public struct Check : ISerialize
@@ -67,9 +77,8 @@ public class HeartRateManager
         }
     }
 
-    public struct Data : IDeserialize
+    public struct Reading : IDeserialize
     {
-        public byte Code;
         public uint IR1;
         public uint IR2;
         public byte Status;
@@ -86,7 +95,6 @@ public class HeartRateManager
             using (var s = new MemoryStream(bytes))
             using (var r = new BinaryReader(s))
             {
-                Code = r.ReadByte();
                 // little endian
                 IR1 = (uint)(r.ReadByte() | r.ReadByte() << 8 | r.ReadByte() << 16);
                 IR2 = (uint)(r.ReadByte() | r.ReadByte() << 8 | r.ReadByte() << 16);
@@ -105,7 +113,8 @@ public class HeartRateManager
     public struct Packet : ISerialize, IDeserialize
     {
         public ushort Magic;
-        public byte[] Data;
+        public PayloadType PayloadType;
+        public byte[] Payload;
 
         public static ushort HOST_MAGIC = 0xaa55;
         public static ushort GUEST_MAGIC = 0x55aa;
@@ -115,15 +124,24 @@ public class HeartRateManager
             using (var s = new MemoryStream())
             using (var w = new BinaryWriter(s))
             {
+                int checksum = 0;
                 // Magic (big endian)
                 w.Write((byte)(Magic >> 8));
                 w.Write((byte)(Magic & 0xff));
                 // Length
-                w.Write((byte)(Data.Length + 1));
+                w.Write((byte)(Payload.Length + 2));
+                checksum += (byte)(Payload.Length + 2);
+                // Data Type
+                w.Write((byte)PayloadType);
+                checksum += (byte)PayloadType;
                 // Data
-                w.Write(Data);
+                if (Payload != null)
+                {
+                    w.Write(Payload);
+                    checksum += Payload.Sum(b => b);
+                }
                 // Checksum
-                w.Write((byte)(Data.Length + 1 + Data.Sum(b => b)));
+                w.Write((byte)checksum);
                 return s.ToArray();
             }
         }
@@ -136,19 +154,109 @@ public class HeartRateManager
                 // Magic (big endian)
                 Magic = (ushort)(r.ReadByte() << 8 + r.ReadByte());
                 byte length = r.ReadByte();
-                Data = r.ReadBytes(length - 1);
-                byte _checksum = r.ReadByte();
+                if (length >= 2)
+                {
+                    PayloadType = (PayloadType)r.ReadByte();
+                    Payload = r.ReadBytes(length - 2);
+                    byte _checksum = r.ReadByte();
+                }
+                else
+                {
+                    PayloadType = PayloadType.Unknown;
+                }
             }
         }
 
         public bool Host()
         {
-            return Magic == Packet.HOST_MAGIC;
+            return Magic == HOST_MAGIC;
         }
 
         public bool Guest()
         {
-            return Magic == Packet.GUEST_MAGIC;
+            return Magic == GUEST_MAGIC;
+        }
+
+        public PayloadType Type()
+        {
+            return PayloadType;
+        }
+
+        public static Packet Command(PayloadType type, ISerialize payload)
+        {
+            var packet = new Packet();
+            packet.Magic = HOST_MAGIC;
+            packet.Payload = payload.Serialize();
+            return packet;
+        }
+
+        public void TestSerialize()
+        {
+            Debug.Assert(AuthCommand().Serialize() == new byte[]
+            {
+                0x55, 0xaa,
+                0x03,
+                0xb1,
+                0x00, 0x00,
+                0xb5
+            });
+        }
+
+        /*
+        public void TestDeserialize()
+        {
+            byte[] packet = { 0x55, 0xaa, 0x11, 0xd0, };
+        }
+        */
+
+        public static Packet Command(PayloadType type)
+        {
+            var packet = new Packet();
+            packet.Magic = HOST_MAGIC;
+            packet.PayloadType = type;
+            packet.Payload = null;
+            return packet;
+        }
+
+        public static Packet Command(PayloadType type, byte[] payload)
+        {
+            var packet = new Packet();
+            packet.Magic = HOST_MAGIC;
+            packet.PayloadType = type;
+            packet.Payload = payload;
+            return packet;
+        }
+
+        public PhysicalAddress PayloadMAC()
+        {
+            return new PhysicalAddress(Payload);
+        }
+
+        public Reading PayloadReading()
+        {
+            var reading = new Reading();
+            reading.Deserialize(Payload);
+            return reading;
+        }
+
+        public static Packet AuthCommand()
+        {
+            return AuthCommand(new byte[] { 0x00, 0x00 });
+        }
+
+        public static Packet AuthCommand(byte[] password)
+        {
+            return Command(PayloadType.Auth, password);
+        }
+
+        public static Packet MACCommand()
+        {
+            return Command(PayloadType.MAC, new byte[] { });
+        }
+
+        public static Packet DisplayCommand(DisplayMode mode)
+        {
+            return Command(PayloadType.Display, new byte[] { (byte)mode });
         }
     }
 
@@ -192,7 +300,7 @@ public class HeartRateManager
     public event Action<Candidate> OnFound;
     public event Action<Device> OnConnected;
     public event Action<Device> OnDisconnected;
-    public event Action<Device, Data> OnReceived;
+    public event Action<Device, Packet> OnReceived;
     public event Action<string> OnError;
 
     HeartRateManager() { }
@@ -244,6 +352,7 @@ public class HeartRateManager
     public static void CheckPermissions()
     {
         Debug.Log("[HRM] Enabling Bluetooth");
+#if UNITY_ANDROID
         if (AndroidVersion.SDK_INT >= 31)
         {
             Debug.Log("[HRM] Android SDK >= S");
@@ -265,6 +374,7 @@ public class HeartRateManager
                 }
             );
         }
+#endif
     }
 
     public void Init()
@@ -329,11 +439,8 @@ public class HeartRateManager
         return devices.Values.ToList();
     }
 
-    public void Send(Device device, ISerialize payload)
+    public void Send(Device device, ISerialize packet)
     {
-        Packet packet;
-        packet.Magic = Packet.HOST_MAGIC;
-        packet.Data = payload.Serialize();
         var data = packet.Serialize();
         Debug.LogFormat("[HRM] Writing value {0} at {1} from service {2}", string.Join(',', data.Select(b => b.ToString("X2"))), device.CommandCharacteristic, device.ServiceUUID);
         BLE.WriteCharacteristic(device.Address, device.ServiceUUID, device.CommandCharacteristic, data, data.Length, true, (uuid) =>
@@ -345,20 +452,7 @@ public class HeartRateManager
     {
         var packet = new Packet();
         packet.Deserialize(data);
-        if (packet.Data.Length != 0)
-        {
-            Code code = (Code)(packet.Data[0]);
-            switch (code)
-            {
-                case Code.Data:
-                    var payload = new Data();
-                    payload.Deserialize(packet.Data);
-                    OnReceived?.Invoke(device, payload);
-                    break;
-                default:
-                    break;
-            }
-        }
+        OnReceived?.Invoke(device, packet);
     }
 
     private void SetupMTU(Device device)

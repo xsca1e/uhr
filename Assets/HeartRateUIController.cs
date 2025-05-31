@@ -2,10 +2,13 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Device = HeartRateManager.Device;
 using Candidate = HeartRateManager.Candidate;
-using Data = HeartRateManager.Data;
-using Check = HeartRateManager.Check;
+using Packet = HeartRateManager.Packet;
+using Reading = HeartRateManager.Reading;
+using DisplayMode = HeartRateManager.DisplayMode;
+using PayloadType = HeartRateManager.PayloadType;
 
 public class HeartRateUIController : MonoBehaviour
 {
@@ -18,6 +21,9 @@ public class HeartRateUIController : MonoBehaviour
     private ListView deviceList;
     private Label scanStatus;
     private Label errorLabel;
+
+    private Label deviceName;
+    private Label macInfo;
 
     private Label prValue;
     private Label spo2Value;
@@ -32,6 +38,7 @@ public class HeartRateUIController : MonoBehaviour
     private Button scanButton;
     private Toggle autoConnectToggle;
     private Button disconnectButton;
+    private Button[] modeButtons;
 
     private HeartRateManager hrm;
     private List<Candidate> candidates = new List<Candidate>();
@@ -49,6 +56,9 @@ public class HeartRateUIController : MonoBehaviour
         errorLabel = root.Q<Label>("ErrorLabel");
         scanButton = root.Q<Button>("ScanButton");
 
+        deviceName = root.Q<Label>("deviceName");
+        macInfo = root.Q<Label>("macInfo");
+
         prValue = root.Q<Label>("prValue");
         spo2Value = root.Q<Label>("spo2Value");
         piValue = root.Q<Label>("piValue");
@@ -61,6 +71,17 @@ public class HeartRateUIController : MonoBehaviour
 
         autoConnectToggle = root.Q<Toggle>("AutoConnectToggle");
         disconnectButton = root.Q<Button>("DisconnectButton");
+        modeButtons = root.Q<VisualElement>("modes").Children().Select(v => v as Button).ToArray();
+
+        var i = 0;
+        foreach (var modeButton in modeButtons)
+        {
+            modeButton.clicked += () =>
+            {
+                OnModeButtonClicked(modeButton);
+            };
+            i++;
+        }
 
         deviceList.makeItem = () => new Label();
         deviceList.bindItem = (element, index) =>
@@ -76,7 +97,7 @@ public class HeartRateUIController : MonoBehaviour
         hrm.OnFound += OnDeviceFound;
         hrm.OnConnected += OnDeviceConnected;
         hrm.OnDisconnected += OnDeviceDisconnected;
-        hrm.OnReceived += OnDataReceived;
+        hrm.OnReceived += OnPacketReceived;
 
         autoConnectAddress = PlayerPrefs.GetString("AutoConnectAddress", "");
         Debug.LogFormat("[DBG] Auto connect address: {0}", autoConnectAddress);
@@ -172,6 +193,7 @@ public class HeartRateUIController : MonoBehaviour
 
     private void OnDeviceConnected(Device device)
     {
+        deviceName.text = device.Name;
         shouldAutoConnect = false;
         connectedDevice = device;
         scanView.style.display = DisplayStyle.None;
@@ -182,22 +204,36 @@ public class HeartRateUIController : MonoBehaviour
 
     private IEnumerator Handshake(Device device)
     {
-        yield return new WaitForSeconds(2);
-        hrm.Send(device, Check.Default());
+        yield return new WaitForSeconds(1);
+        hrm.Send(device, Packet.AuthCommand());
+        yield return new WaitForSeconds(1);
+        hrm.Send(device, Packet.MACCommand());
         yield return null;
     }
 
-    private void OnDataReceived(Device device, Data data)
+    private void OnPacketReceived(Device device, Packet packet)
     {
-        prValue.text = data.PR.ToString();
-        spo2Value.text = data.SPO2.ToString();
-        piValue.text = $"{data.PI / 10.0f}";
-        rrValue.text = $"{data.RRInterval * 2}";
-        ir1Value.text = data.IR1.ToString();
-        ir2Value.text = data.IR2.ToString();
-        sdnnValue.text = data.SDNN.ToString();
-        sampleValue.text = data.SampleIndex.ToString();
-        batteryValue.text = data.Battery.ToString();
+        switch (packet.PayloadType)
+        {
+            case PayloadType.Reading:
+                var reading = packet.PayloadReading();
+                prValue.text = reading.PR.ToString();
+                spo2Value.text = reading.SPO2.ToString();
+                piValue.text = $"{reading.PI / 10.0f}";
+                rrValue.text = $"{reading.RRInterval * 2}";
+                ir1Value.text = reading.IR1.ToString();
+                ir2Value.text = reading.IR2.ToString();
+                sdnnValue.text = reading.SDNN.ToString();
+                sampleValue.text = reading.SampleIndex.ToString();
+                batteryValue.text = reading.Battery.ToString();
+                break;
+            case PayloadType.MAC:
+                var mac = packet.PayloadMAC();
+                macInfo.text = string.Join(":", mac.GetAddressBytes().Select(b => b.ToString("X2")));
+                break;
+            default:
+                break;
+        }
     }
 
     private void OnDisconnect()
@@ -213,6 +249,7 @@ public class HeartRateUIController : MonoBehaviour
         prValue.text = spo2Value.text = piValue.text = rrValue.text = "-";
         ir1Value.text = ir2Value.text = "-";
         sdnnValue.text = sampleValue.text = batteryValue.text = "-";
+        deviceName.text = macInfo.text = "-";
         connectedDevice = null;
         scanView.style.display = DisplayStyle.Flex;
         dataView.style.display = DisplayStyle.None;
@@ -230,6 +267,31 @@ public class HeartRateUIController : MonoBehaviour
         {
             PlayerPrefs.DeleteKey("AutoConnectAddress");
             autoConnectAddress = "";
+        }
+    }
+
+    private void OnModeButtonClicked(Button button)
+    {
+        if (connectedDevice != null)
+        {
+            DisplayMode mode = DisplayMode.PR_SPO2;
+            switch (button.name)
+            {
+                case "PR_SPO2":
+                    mode = DisplayMode.PR_SPO2;
+                    break;
+                case "PR_RLX":
+                    mode = DisplayMode.PR_RLX;
+                    break;
+                case "RMSSD_SPO2":
+                    mode = DisplayMode.RMSSD_SPO2;
+                    break;
+                case "SDNN_SPO2":
+                    mode = DisplayMode.SDNN_SPO2;
+                    break;
+            }
+            Debug.LogFormat("[DBG] Switching to mode {0} (value {1:X})", button.name, (byte)mode);
+            hrm.Send(connectedDevice, Packet.DisplayCommand(mode));
         }
     }
 
