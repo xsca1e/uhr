@@ -294,6 +294,7 @@ public class HeartRateManager
         }
     }
 
+    private bool inited = false;
     private List<Candidate> candidates;
     private Dictionary<string, Device> devices;
 
@@ -382,6 +383,7 @@ public class HeartRateManager
         BLE.Initialize(true, false, () =>
         {
             Debug.Log("[HRM] BLE inited");
+            inited = true;
         }, (error) =>
         {
             Debug.LogFormat("[HRM] BLE error {0}", error);
@@ -394,6 +396,11 @@ public class HeartRateManager
                 OnError?.Invoke(error);
             }
         });
+    }
+
+    public bool HasInited()
+    {
+        return inited;
     }
 
     public void StartScan(string prefix = PrefixIgnoreCase)

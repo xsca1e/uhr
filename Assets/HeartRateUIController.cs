@@ -102,7 +102,7 @@ public class HeartRateUIController : MonoBehaviour
         autoConnectAddress = PlayerPrefs.GetString("AutoConnectAddress", "");
         Debug.LogFormat("[DBG] Auto connect address: {0}", autoConnectAddress);
 
-        HeartRateManager.CheckPermissions();
+        // HeartRateManager.CheckPermissions();
         hrm.Init();
 
         StartScan();
