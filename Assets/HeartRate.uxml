@@ -9,7 +9,7 @@
                     <ui:ListView name="DeviceList" selectionType="Single" class="device-list" />
                     <ui:Label name="ErrorLabel" class="error hidden" />
                 </ui:VisualElement>
-                <ui:VisualElement class="controls">
+                <ui:VisualElement class="controls hidden">
                     <ui:Button name="ScanButton" text="RESCAN" class="scan-btn" />
                 </ui:VisualElement>
             </ui:VisualElement>

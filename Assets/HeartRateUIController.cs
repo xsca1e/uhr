@@ -194,7 +194,9 @@ public class HeartRateUIController : MonoBehaviour
     private void OnDeviceConnected(Device device)
     {
         deviceName.text = device.Name;
-        shouldAutoConnect = false;
+        // Enable auto connect even user actively disconnects
+        // shouldAutoConnect = false;
+        shouldAutoConnect = true;
         connectedDevice = device;
         scanView.style.display = DisplayStyle.None;
         dataView.style.display = DisplayStyle.Flex;
