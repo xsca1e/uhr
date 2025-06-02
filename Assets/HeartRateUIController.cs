@@ -3,12 +3,12 @@ using UnityEngine.UIElements;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Device = HeartRateManager.Device;
-using Candidate = HeartRateManager.Candidate;
-using Packet = HeartRateManager.Packet;
-using Reading = HeartRateManager.Reading;
-using DisplayMode = HeartRateManager.DisplayMode;
-using PayloadType = HeartRateManager.PayloadType;
+using Device = IHeartRateManager.Device;
+using Candidate = IHeartRateManager.Candidate;
+using Packet = IHeartRateManager.Packet;
+using Reading = IHeartRateManager.Reading;
+using DisplayMode = IHeartRateManager.DisplayMode;
+using PayloadType = IHeartRateManager.PayloadType;
 
 public class HeartRateUIController : MonoBehaviour
 {
@@ -40,7 +40,7 @@ public class HeartRateUIController : MonoBehaviour
     private Button disconnectButton;
     private Button[] modeButtons;
 
-    private HeartRateManager hrm;
+    private IHeartRateManager hrm;
     private List<Candidate> candidates = new List<Candidate>();
     private Device connectedDevice;
     private string autoConnectAddress;
@@ -85,7 +85,7 @@ public class HeartRateUIController : MonoBehaviour
 
         deviceList.makeItem = () => new Label();
         deviceList.bindItem = (element, index) =>
-            ((Label)element).text = $"{candidates[index].Name} ({candidates[index].Address})";
+            ((Label)element).text = candidates[index].Display();
         deviceList.itemsSource = candidates;
         deviceList.onSelectionChange += OnDeviceSelected;
 
@@ -104,8 +104,9 @@ public class HeartRateUIController : MonoBehaviour
 
         // HeartRateManager.CheckPermissions();
         hrm.Init();
-
+        StartCoroutine(hrm.Run());
         StartScan();
+        // StartCoroutine(hrm.RunDebug());
     }
 
     private void OnScanButtonClicked()
@@ -155,6 +156,7 @@ public class HeartRateUIController : MonoBehaviour
 
     private void StartScan()
     {
+        deviceList.SetEnabled(true);
         Debug.Log("[DBG] UI start scan");
         candidates.Clear();
         deviceList.Rebuild();
@@ -173,9 +175,17 @@ public class HeartRateUIController : MonoBehaviour
 
         if (shouldAutoConnect && autoConnectAddress == candidate.Address)
         {
-            Debug.LogFormat("[DBG] Found auto connect target {0} ({1})", candidate.Name, candidate.Address);
-            hrm.Connect(candidate);
+            Debug.LogFormat("[DBG] Found auto connect target {0}", candidate.Display());
+            Connect(candidate);
         }
+    }
+
+    private void Connect(Candidate candidate)
+    {
+        StopScan();
+        deviceList.SetEnabled(false);
+        hrm.Connect(candidate);
+        scanStatus.text = "Connecting...";
     }
 
     private void OnDeviceSelected(IEnumerable<object> selected)
@@ -185,8 +195,7 @@ public class HeartRateUIController : MonoBehaviour
             int index = candidates.IndexOf((Candidate)item);
             if (index >= 0)
             {
-                StopScan();
-                hrm.Connect(candidates[index]);
+                Connect(candidates[index]);
             }
         }
     }
