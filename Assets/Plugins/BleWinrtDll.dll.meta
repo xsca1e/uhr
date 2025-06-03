@@ -6,7 +6,7 @@ PluginImporter:
   iconMap: {}
   executionOrder: {}
   defineConstraints: []
-  isPreloaded: 0
+  isPreloaded: 1
   isOverridable: 0
   isExplicitlyReferenced: 0
   validateReferences: 1
@@ -17,7 +17,7 @@ PluginImporter:
       enabled: 0
       settings:
         Exclude Android: 1
-        Exclude Editor: 1
+        Exclude Editor: 0
         Exclude Linux64: 0
         Exclude OSXUniversal: 0
         Exclude Win: 1
@@ -37,11 +37,11 @@ PluginImporter:
   - first:
       Editor: Editor
     second:
-      enabled: 0
+      enabled: 1
       settings:
-        CPU: AnyCPU
+        CPU: x86_64
         DefaultValueInitialized: true
-        OS: AnyOS
+        OS: Windows
   - first:
       Standalone: Linux64
     second:
